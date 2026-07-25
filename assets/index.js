@@ -118,20 +118,48 @@ imageInput.addEventListener('change', (event) => {
     var reader = new FileReader();
 
     reader.onload = function(e) {
-        var base64Image = e.target.result;
-        
-        try {
-            upload.classList.remove("error_shown")
-            upload.setAttribute("selected", base64Image);
-            upload.classList.add("upload_loaded");
-            upload.classList.remove("upload_loading");
-            upload.querySelector(".upload_uploaded").src = base64Image;
-            saveField("image", base64Image);
-        } catch(err) {
-            console.error('Błąd ładowania zdjęcia:', err);
+        var img = new Image();
+        img.onload = function() {
+            var maxSize = 512;
+            var width = img.width;
+            var height = img.height;
+
+            if (width > maxSize || height > maxSize) {
+                if (width > height) {
+                    height = Math.round(height * maxSize / width);
+                    width = maxSize;
+                } else {
+                    width = Math.round(width * maxSize / height);
+                    height = maxSize;
+                }
+            }
+
+            var canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            try {
+                var base64Image = canvas.toDataURL('image/jpeg', 0.75);
+                upload.classList.remove("error_shown")
+                upload.setAttribute("selected", base64Image);
+                upload.classList.add("upload_loaded");
+                upload.classList.remove("upload_loading");
+                upload.querySelector(".upload_uploaded").src = base64Image;
+                saveField("image", base64Image);
+            } catch(err) {
+                console.error('Błąd ładowania zdjęcia:', err);
+                upload.classList.remove("upload_loading");
+                upload.classList.add("error_shown");
+            }
+        };
+        img.onerror = function() {
+            console.error('Nie można wczytać obrazu');
             upload.classList.remove("upload_loading");
             upload.classList.add("error_shown");
-        }
+        };
+        img.src = e.target.result;
     }
 
     reader.onerror = function() {
@@ -228,15 +256,17 @@ function saveAllFields() {
 window.addEventListener('pagehide', saveAllFields);
 window.addEventListener('beforeunload', saveAllFields);
 
-loadFormFromLocalStorage();
+window.addEventListener('load', () => {
+    loadFormFromLocalStorage();
+});
 
 var guide = document.querySelector(".guide_holder");
-guide.addEventListener('click', () => {
-
-    if (guide.classList.contains("unfolded")){
-        guide.classList.remove("unfolded");
-    }else{
-        guide.classList.add("unfolded");
-    }
-
-})
+if (guide) {
+    guide.addEventListener('click', () => {
+        if (guide.classList.contains("unfolded")){
+            guide.classList.remove("unfolded");
+        }else{
+            guide.classList.add("unfolded");
+        }
+    });
+}
