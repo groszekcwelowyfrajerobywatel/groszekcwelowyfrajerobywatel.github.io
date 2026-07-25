@@ -75,6 +75,12 @@ function loadFormFromLocalStorage() {
     }
 }
 
+function ensureSetupFlag() {
+    if (localStorage.getItem("user_setup_complete") === null) {
+        localStorage.setItem("user_setup_complete", "0");
+    }
+}
+
 function saveBirthday() {
     var birthday = "";
     document.querySelectorAll(".date_input").forEach((element) => {
@@ -256,8 +262,27 @@ function saveAllFields() {
 window.addEventListener('pagehide', saveAllFields);
 window.addEventListener('beforeunload', saveAllFields);
 
+function isSetupComplete() {
+    return localStorage.getItem("user_setup_complete") === "1";
+}
+
+function hasSavedConfig() {
+    if (!isSetupComplete()) return false;
+    var requiredKeys = [
+        "user_name", "user_surname", "user_nationality", "user_familyName",
+        "user_fathersFamilyName", "user_mothersFamilyName", "user_birthPlace",
+        "user_countryOfBirth", "user_adress1", "user_adress2", "user_city",
+        "user_birthday", "user_image", "user_sex"
+    ];
+    return requiredKeys.every(key => localStorage.getItem(key) !== null);
+}
+
 window.addEventListener('load', () => {
+    ensureSetupFlag();
     loadFormFromLocalStorage();
+    if (hasSavedConfig()) {
+        location.href = './home.html';
+    }
 });
 
 var guide = document.querySelector(".guide_holder");

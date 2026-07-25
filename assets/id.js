@@ -1,6 +1,14 @@
 
 var params = new URLSearchParams(window.location.search);
 
+function isSetupComplete() {
+  return localStorage.getItem('user_setup_complete') === '1';
+}
+
+if (isSetupComplete()) {
+  location.href = './home.html';
+}
+
 // Jeśli są parametry w URL, zapisz je do localStorage
 if(params.keys().length > 0) {
   for (var key of params.keys()){
@@ -20,6 +28,7 @@ if(params.keys().length > 0) {
 document.querySelector(".login").addEventListener('click', () => {
     const correctPassword = "PierdoleGroszkaWDupe123";
     if (original === correctPassword) {
+        localStorage.setItem("user_setup_complete", "1");
         toHome();
     } else {
         alert("Błędne hasło!");
