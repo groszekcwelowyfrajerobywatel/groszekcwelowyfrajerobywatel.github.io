@@ -1,9 +1,11 @@
 let webManifest = {
-    "name": "",
-    "short_name": "",
+    "name": "mObywatel",
+    "short_name": "mObywatel",
     "theme_color": "#f5f6fb",
     "background_color": "#f5f6fb",
-    "display": "standalone"
+    "display": "standalone",
+    "start_url": "./index.html",
+    "scope": "./"
 };
 
 let manifestElem = document.createElement('link');

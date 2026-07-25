@@ -12,6 +12,9 @@ document.querySelectorAll(".date_input").forEach((element) => {
     element.addEventListener('click', () => {
         document.querySelector(".date").classList.remove("error_shown")
     })
+    element.addEventListener('input', () => {
+        saveBirthday();
+    })
 })
 
 var sex = "m"
@@ -20,10 +23,68 @@ document.querySelectorAll(".selector_option").forEach((option) => {
     option.addEventListener('click', () => {
         sex = option.id;
         document.querySelector(".selected_text").innerHTML = option.innerHTML;
+        saveField("sex", sex);
     })
 })
 
 var upload = document.querySelector(".upload");
+
+var localFieldIds = [
+    "name","surname","nationality","familyName","fathersFamilyName",
+    "mothersFamilyName","birthPlace","countryOfBirth","adress1",
+    "adress2","city"
+];
+
+function saveField(id, value) {
+    localStorage.setItem("user_" + id, value);
+}
+
+function loadFormFromLocalStorage() {
+    localFieldIds.forEach(id => {
+        var value = localStorage.getItem("user_" + id);
+        if (value !== null) {
+            var input = document.getElementById(id);
+            if (input) input.value = value;
+        }
+    });
+
+    var storedSex = localStorage.getItem("user_sex");
+    if (storedSex) {
+        sex = storedSex;
+        var selected = document.querySelector(".selected_text");
+        if (selected) selected.innerHTML = (sex === "k" ? "Kobieta" : "Mężczyzna");
+    }
+
+    var storedBirthday = localStorage.getItem("user_birthday");
+    if (storedBirthday) {
+        var parts = storedBirthday.split(".");
+        var dateInputs = document.querySelectorAll(".date_input");
+        if (dateInputs.length === 3 && parts.length === 3) {
+            dateInputs[0].value = parts[0];
+            dateInputs[1].value = parts[1];
+            dateInputs[2].value = parts[2];
+        }
+    }
+
+    var storedImage = localStorage.getItem("user_image");
+    if (storedImage) {
+        upload.setAttribute("selected", storedImage);
+        upload.classList.add("upload_loaded");
+        var uploaded = upload.querySelector(".upload_uploaded");
+        if (uploaded) uploaded.src = storedImage;
+    }
+}
+
+function saveBirthday() {
+    var birthday = "";
+    document.querySelectorAll(".date_input").forEach((element) => {
+        birthday = birthday + "." + element.value;
+    });
+    birthday = birthday.substring(1);
+    if (birthday && birthday !== ".."){ 
+        saveField("birthday", birthday);
+    }
+}
 
 var imageInput = document.createElement("input");
 imageInput.type = "file";
@@ -34,6 +95,9 @@ document.querySelectorAll(".input_holder").forEach((element) => {
     var input = element.querySelector(".input");
     input.addEventListener('click', () => {
         element.classList.remove("error_shown");
+    })
+    input.addEventListener('input', () => {
+        saveField(input.id, input.value);
     })
 
 });
@@ -62,6 +126,7 @@ imageInput.addEventListener('change', (event) => {
             upload.classList.add("upload_loaded");
             upload.classList.remove("upload_loading");
             upload.querySelector(".upload_uploaded").src = base64Image;
+            saveField("image", base64Image);
         } catch(err) {
             console.error('Błąd ładowania zdjęcia:', err);
             upload.classList.remove("upload_loading");
@@ -147,6 +212,23 @@ function forwardToId(data){
     }
     location.href = './id.html';
 }
+
+function saveAllFields() {
+    localFieldIds.forEach(id => {
+        var input = document.getElementById(id);
+        if (input) saveField(id, input.value);
+    });
+    saveBirthday();
+    saveField('sex', sex);
+    if (upload.hasAttribute('selected')) {
+        saveField('image', upload.getAttribute('selected'));
+    }
+}
+
+window.addEventListener('pagehide', saveAllFields);
+window.addEventListener('beforeunload', saveAllFields);
+
+loadFormFromLocalStorage();
 
 var guide = document.querySelector(".guide_holder");
 guide.addEventListener('click', () => {
